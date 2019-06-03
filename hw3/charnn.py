@@ -22,7 +22,9 @@ def char_maps(text: str):
     # It's best if you also sort the chars before assigning indices, so that
     # they're in lexical order.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    unique_sorted = sorted(''.join(set(text)))
+    char_to_idx = {v: k for k, v in enumerate(unique_sorted)}
+    idx_to_char = {k: v for k, v in enumerate(unique_sorted)}
     # ========================
     return char_to_idx, idx_to_char
 
@@ -38,7 +40,12 @@ def remove_chars(text: str, chars_to_remove):
     """
     # TODO: Implement according to the docstring.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    text_clean = []
+    for c in text:
+        if c not in chars_to_remove:
+            text_clean.append(c)
+    n_removed = len(text) - len(text_clean)
+    text_clean = ''.join(text_clean)
     # ========================
     return text_clean, n_removed
 
@@ -58,7 +65,9 @@ def chars_to_onehot(text: str, char_to_idx: dict) -> Tensor:
     """
     # TODO: Implement the embedding.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    indices = torch.tensor([char_to_idx[c] for c in text]).view(-1, 1)
+    result = torch.zeros((len(text), len(char_to_idx)), dtype=torch.int8)
+    result.scatter_(-1, indices, 1)
     # ========================
     return result
 
@@ -75,7 +84,9 @@ def onehot_to_chars(embedded_text: Tensor, idx_to_char: dict) -> str:
     """
     # TODO: Implement the reverse-embedding.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    result = (embedded_text == 1).nonzero()
+    result = [idx_to_char[int(idx)] for _, idx in result]
+    result = ''.join(result)
     # ========================
     return result
 
