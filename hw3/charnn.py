@@ -115,7 +115,9 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int,
     # 3. Create the labels tensor in a similar way and convert to indices.
     # Note that no explicit loops are required to implement this function.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    r = len(text) % seq_len
+    samples = chars_to_onehot(text[:-r], char_to_idx).view((-1, seq_len, len(char_to_idx))).to(device)
+    labels = torch.tensor(list(map(lambda c: char_to_idx[c],text[1:-r + 1]))).view((-1, seq_len)).to(device)
     # ========================
     return samples, labels
 
@@ -211,7 +213,26 @@ class MultilayerGRU(nn.Module):
         #     then call self.register_parameter() on them. Also make
         #     sure to initialize them. See functions in torch.nn.init.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
+        in_dims = [self.in_dim] + [self.h_dim] * self.n_layers
+        for i in range(self.n_layers):
+            layers = []
+            for l in ['l_rx', 'l_zx', 'l_gx', 'l_rh', 'l_zh', 'l_gh']:
+                if 'x' in l:
+                    layer = nn.Linear(in_dims[i], in_dims[i + 1])
+                elif 'h' in l:
+                    layer = nn.Linear(self.h_dim, self.h_dim, bias=False)
+                else:
+                    raise NameError('layer name must contain "x" or "h"')
+                layers.append(layer)
+                self.add_module(l + str(i), layer)
+            self.layer_params.append(layers)
+
+
+        # output layer
+        output = nn.Linear(self.h_dim, self.out_dim)
+        self.add_module('output', output)
+        self.layer_params.append([output])
         # ========================
 
     def forward(self, input: Tensor, hidden_state: Tensor=None):
@@ -246,6 +267,25 @@ class MultilayerGRU(nn.Module):
         # Tip: You can use torch.stack() to combine multiple tensors into a
         # single tensor in a differentiable manner.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        outputs = []
+        for t in range(seq_len):
+            x = layer_input[:, t, :]
+            for i in range(self.n_layers):
+                # calculate new hidden state
+                l_rx, l_rh = getattr(self, f'l_rx{i}'), getattr(self, f'l_rh{i}')
+                r = F.sigmoid(l_rx(x) + l_rh(layer_states[i]))
+                l_zx, l_zh = getattr(self, f'l_zx{i}'), getattr(self, f'l_zh{i}')
+                z = F.sigmoid(l_zx(x) + l_zh(layer_states[i]))
+                l_gx, l_gh = getattr(self, f'l_gx{i}'), getattr(self, f'l_gh{i}')
+                g = F.tanh(l_gx(x) + l_gh(r * layer_states[i]))
+                h = z * layer_states[i] + (1- z) * g
+                # update states
+                x = h
+                layer_states[i] = h
+            outputs.append(self.output(x))
+
+        # output layer
+        layer_output = torch.stack(outputs, dim=1)
+        hidden_state = torch.stack(layer_states, dim=1)
         # ========================
         return layer_output, hidden_state
