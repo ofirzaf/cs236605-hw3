@@ -133,7 +133,7 @@ def hot_softmax(y, dim=0, temperature=1.0):
     """
     # TODO: Implement based on the above.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    result = F.softmax(y / temperature, dim=dim)
     # ========================
     return result
 
