@@ -117,7 +117,7 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int,
     # ====== YOUR CODE: ======
     r = len(text) % seq_len
     samples = chars_to_onehot(text[:-r], char_to_idx).view((-1, seq_len, len(char_to_idx))).to(device)
-    labels = torch.tensor(list(map(lambda c: char_to_idx[c],text[1:-r + 1]))).view((-1, seq_len)).to(device)
+    labels = torch.tensor(list(map(lambda c: char_to_idx[c],text[1:-r + 1])), device=device).view((-1, seq_len))
     # ========================
     return samples, labels
 
@@ -169,7 +169,13 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     # necessary for this. Best to disable tracking for speed.
     # See torch.no_grad().
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    generated = []
+    for i in range(n_chars - len(start_sequence)):
+        embeddings = chars_to_onehot(out_text, char_to_idx).to(device=device).unsqueeze(dim=0)
+        logits, hidden_state = model(embeddings.to(dtype=torch.float32))
+        out_text = idx_to_char[int(torch.multinomial(hot_softmax(logits, temperature=T), 1))]
+        generated.append(out_text)
+    out_text = start_sequence + ''.join(generated)
     # ========================
 
     return out_text
@@ -273,11 +279,11 @@ class MultilayerGRU(nn.Module):
             for i in range(self.n_layers):
                 # calculate new hidden state
                 l_rx, l_rh = getattr(self, f'l_rx{i}'), getattr(self, f'l_rh{i}')
-                r = F.sigmoid(l_rx(x) + l_rh(layer_states[i]))
+                r = torch.sigmoid(l_rx(x) + l_rh(layer_states[i]))
                 l_zx, l_zh = getattr(self, f'l_zx{i}'), getattr(self, f'l_zh{i}')
-                z = F.sigmoid(l_zx(x) + l_zh(layer_states[i]))
+                z = torch.sigmoid(l_zx(x) + l_zh(layer_states[i]))
                 l_gx, l_gh = getattr(self, f'l_gx{i}'), getattr(self, f'l_gh{i}')
-                g = F.tanh(l_gx(x) + l_gh(r * layer_states[i]))
+                g = torch.tanh(l_gx(x) + l_gh(r * layer_states[i]))
                 h = z * layer_states[i] + (1- z) * g
                 # update states
                 x = h
