@@ -170,12 +170,13 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     # See torch.no_grad().
     # ====== YOUR CODE: ======
     generated = []
-    for i in range(n_chars - len(start_sequence)):
-        embeddings = chars_to_onehot(out_text, char_to_idx).to(device=device).unsqueeze(dim=0)
-        logits, hidden_state = model(embeddings.to(dtype=torch.float32))
-        out_text = idx_to_char[int(torch.multinomial(hot_softmax(logits, temperature=T), 1))]
-        generated.append(out_text)
-    out_text = start_sequence + ''.join(generated)
+    with torch.no_grad():
+        for i in range(n_chars - len(start_sequence)):
+            embeddings = chars_to_onehot(out_text, char_to_idx).to(device=device).unsqueeze(dim=0)
+            logits, hidden_state = model(embeddings.to(dtype=torch.float32))
+            out_text = idx_to_char[int(torch.multinomial(hot_softmax(logits[:, -1, :], temperature=T), 1))]
+            generated.append(out_text)
+        out_text = start_sequence + ''.join(generated)
     # ========================
 
     return out_text
@@ -219,21 +220,23 @@ class MultilayerGRU(nn.Module):
         #     then call self.register_parameter() on them. Also make
         #     sure to initialize them. See functions in torch.nn.init.
         # ====== YOUR CODE: ======
-
+        # dimensions of inputs & outputs per layer
         in_dims = [self.in_dim] + [self.h_dim] * self.n_layers
+        # construct layers
         for i in range(self.n_layers):
             layers = []
+            # 6 linears are required in each layers
             for l in ['l_rx', 'l_zx', 'l_gx', 'l_rh', 'l_zh', 'l_gh']:
+                # x dimensions are according to in_dims list
                 if 'x' in l:
                     layer = nn.Linear(in_dims[i], in_dims[i + 1])
-                elif 'h' in l:
-                    layer = nn.Linear(self.h_dim, self.h_dim, bias=False)
+                # hidden dimensions are constant
                 else:
-                    raise NameError('layer name must contain "x" or "h"')
+                    layer = nn.Linear(self.h_dim, self.h_dim, bias=False)
                 layers.append(layer)
+                # register layers to module
                 self.add_module(l + str(i), layer)
             self.layer_params.append(layers)
-
 
         # output layer
         output = nn.Linear(self.h_dim, self.out_dim)
