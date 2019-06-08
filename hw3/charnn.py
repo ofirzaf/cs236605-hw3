@@ -170,11 +170,12 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     # See torch.no_grad().
     # ====== YOUR CODE: ======
     generated = []
+    hidden_state = None
     with torch.no_grad():
-        for i in range(n_chars - len(start_sequence)):
+        for _ in range(n_chars - len(start_sequence)):
             embeddings = chars_to_onehot(out_text, char_to_idx).to(device=device).unsqueeze(dim=0)
-            logits, hidden_state = model(embeddings.to(dtype=torch.float32))
-            out_text = idx_to_char[int(torch.multinomial(hot_softmax(logits[:, -1, :], temperature=T), 1))]
+            logits, hidden_state = model(embeddings.to(dtype=torch.float32), hidden_state)
+            out_text = idx_to_char[int(torch.multinomial(hot_softmax(logits[:, -1, :].view(-1), temperature=T), 1))]
             generated.append(out_text)
         out_text = start_sequence + ''.join(generated)
     # ========================

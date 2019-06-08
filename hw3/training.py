@@ -85,7 +85,26 @@ class Trainer(abc.ABC):
             # - Implement early stopping. This is a very useful and
             #   simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            train_result = self.train_epoch(dl_train, **kw)
+            test_result = self.test_epoch(dl_test, **kw)
+            train_loss.append((sum(train_result[0]) / len(train_result[0])).item())
+            train_acc.append(train_result[1].item())
+            test_loss.append((sum(test_result[0]) / len(test_result[0])).item())
+            test_acc.append(test_result[1].item())
+
+            # update epochs without improvements
+            try:
+                if test_acc[-1] > best_acc:
+                    best_acc = test_acc[-1]
+                    epochs_without_improvement = 0
+                else:
+                    epochs_without_improvement += 1
+            except TypeError:
+                best_acc = test_acc[-1]
+
+            # early stopping
+            if epochs_without_improvement >= early_stopping:
+                break
             # ========================
 
             # Save model checkpoint if requested
@@ -207,7 +226,7 @@ class RNNTrainer(Trainer):
     def train_epoch(self, dl_train: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-
+        self.hidden_state = None
         # ========================
         return super().train_epoch(dl_train, **kw)
 
@@ -232,11 +251,11 @@ class RNNTrainer(Trainer):
         # - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
-        logits, _ = self.model(x)
+        logits, self.hidden_state = self.model(x, self.hidden_state)
         logits = logits.view((-1, x.shape[-1]))
-        y = y.view((-1, 1))
+        y = y.view((-1))
         loss = self.loss_fn(logits, y)
-        loss.backward()
+        loss.backward(retain_graph=True)
         self.optimizer.step()
         num_correct = torch.sum(torch.argmax(logits, dim=1) == y)
         # ========================
