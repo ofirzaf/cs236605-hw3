@@ -87,10 +87,10 @@ class Trainer(abc.ABC):
             # ====== YOUR CODE: ======
             train_result = self.train_epoch(dl_train, **kw)
             test_result = self.test_epoch(dl_test, **kw)
-            train_loss.append((sum(train_result[0]) / len(train_result[0])).item())
-            train_acc.append(train_result[1].item())
-            test_loss.append((sum(test_result[0]) / len(test_result[0])).item())
-            test_acc.append(test_result[1].item())
+            train_loss.append((sum(train_result[0]) / len(train_result[0])))
+            train_acc.append(train_result[1])
+            test_loss.append((sum(test_result[0]) / len(test_result[0])))
+            test_acc.append(test_result[1])
 
             # update epochs without improvements
             try:
@@ -253,11 +253,12 @@ class RNNTrainer(Trainer):
         # - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
         self.optimizer.zero_grad()
-        logits, self.hidden_state = self.model(x, self.hidden_state)
+        logits, hidden_state = self.model(x, self.hidden_state)
+        self.hidden_state = hidden_state.detach()
         logits = logits.view((-1, x.shape[-1]))
         y = y.view((-1))
         loss = self.loss_fn(logits, y)
-        loss.backward(retain_graph=True)
+        loss.backward()
         self.optimizer.step()
         num_correct = torch.sum(torch.argmax(logits, dim=1) == y)
         # ========================

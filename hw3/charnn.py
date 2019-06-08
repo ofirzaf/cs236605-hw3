@@ -288,10 +288,9 @@ class MultilayerGRU(nn.Module):
                 z = torch.sigmoid(l_zx(x) + l_zh(layer_states[i]))
                 l_gx, l_gh = getattr(self, f'l_gx{i}'), getattr(self, f'l_gh{i}')
                 g = torch.tanh(l_gx(x) + l_gh(r * layer_states[i]))
-                h = z * layer_states[i] + (1- z) * g
+                x = z * layer_states[i] + (1- z) * g
                 # update states
-                x = h
-                layer_states[i] = h
+                layer_states[i] = x
             outputs.append(self.output(x))
 
         # output layer
