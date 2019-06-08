@@ -97,9 +97,11 @@ class Trainer(abc.ABC):
                 if test_acc[-1] > best_acc:
                     best_acc = test_acc[-1]
                     epochs_without_improvement = 0
+                    save_checkpoint = True
                 else:
                     epochs_without_improvement += 1
             except TypeError:
+                save_checkpoint = True
                 best_acc = test_acc[-1]
 
             # early stopping
@@ -233,7 +235,7 @@ class RNNTrainer(Trainer):
     def test_epoch(self, dl_test: DataLoader, **kw):
         # TODO: Implement modifications to the base method, if needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.hidden_state = None
         # ========================
         return super().test_epoch(dl_test, **kw)
 
@@ -276,7 +278,11 @@ class RNNTrainer(Trainer):
             # - Loss calculation
             # - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            logits, self.hidden_state = self.model(x, self.hidden_state)
+            logits = logits.view((-1, x.shape[-1]))
+            y = y.view((-1))
+            loss = self.loss_fn(logits, y)
+            num_correct = torch.sum(torch.argmax(logits, dim=1) == y)
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
