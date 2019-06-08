@@ -20,55 +20,31 @@ def part1_generation_params():
 
 
 part1_q1 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+We split the corpus to sequences because we want to speed up the training process by training in batches.
+Furthermore in longer sequences the gradients will vanish and there is no benefit from that.
+Also in terms of memory in most cases we wont be able to load the whole corpus into the GPU's memory 
 """
 
 part1_q2 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+The generated text shows memory longer than the sequence length because we pass the hidden state between batches. 
+The hidden state can be viewed as the accumulated memory of the sequence or as the context of the next character in 
+the sequence. 
 """
 
 part1_q3 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+We are not shuffling the dataset because we want to keep the hidden state between batches in order to the model to 
+be able to generate longer sequences.
+If we would have shuffled the batches there won't be any connection between one batch and the other.
 """
 
 part1_q4 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+1. When generating sequences we want the model to predict the characters 
+with highest probabilities, according to our model, in order to generate sequences that have real meaning. 
+In order to achieve that we lower the temperature in order to sample only the highest probability characters.
+2. When the temperature is too high we make the distribution of sampling move towards uniform distribution according to 
+the graph we produced in the notebook. This will result in randomly sampled characters and a sequence without meaning.
+3. When the temperature is very low we give more weight to the model's predictions and this will result in sampling 
+only the highest probability characters. The sampling distribution will move towards delta distribution.
 """
 # ==============
 
