@@ -237,9 +237,14 @@ class MultilayerGRU(nn.Module):
                 layers.append(layer)
                 # register layers to module
                 self.add_module(l + str(i), layer)
+            dropout_layer = nn.Dropout(dropout)
+            self.add_module('dropout' + str(i), dropout_layer)
+            layers.append(dropout_layer)
             self.layer_params.append(layers)
 
         # output layer
+#         dropout_layer = nn.Dropout(dropout)
+#         self.add_module('output_dropout', dropout_layer)
         output = nn.Linear(self.h_dim, self.out_dim)
         self.add_module('output', output)
         self.layer_params.append([output])
@@ -281,6 +286,7 @@ class MultilayerGRU(nn.Module):
         for t in range(seq_len):
             x = layer_input[:, t, :]
             for i in range(self.n_layers):
+                # apply dropout to input
                 # calculate new hidden state
                 l_rx, l_rh = getattr(self, f'l_rx{i}'), getattr(self, f'l_rh{i}')
                 r = torch.sigmoid(l_rx(x) + l_rh(layer_states[i]))
@@ -291,6 +297,8 @@ class MultilayerGRU(nn.Module):
                 x = z * layer_states[i] + (1- z) * g
                 # update states
                 layer_states[i] = x
+                dropout = getattr(self, f'dropout{i}')
+                x = dropout(x)
             outputs.append(self.output(x))
 
         # output layer
