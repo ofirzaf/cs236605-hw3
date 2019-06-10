@@ -64,35 +64,22 @@ def part2_vae_hyperparams():
     )
     # TODO: Tweak the hyperparameters to generate a former president.
     # ====== YOUR CODE: ======
-    hypers.update(batch_size = 32, h_dim=1024, z_dim=512, x_sigma2=1., learn_rate=1e-4, betas=(0.9, 0.999),)
+    hypers.update(batch_size=8, h_dim=1024, z_dim=20, x_sigma2=0.0001, learn_rate=1e-5, betas=(0.9, 0.997),)
     # ========================
     return hypers
 
 
 part2_q1 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+The $\sigma^2$ hyperparameter defines how much we want to allow the output diverge from the real input image.<br>
+For very high $\sigma^2$ we will get very random images because the data loss will be approximately 0. However the latent distribution will be very similar to normal distribution since the loss will be dominated by the KL divergence.<br>
+For very low $\sigma^2$ we will make the decoder learn for every point the latent space a single image from the dataset since the loss will be dominated by the data loss expression. This will also result in an unexpected latent space distribution since the KL divergence will not affect the loss at all.
 """
 
 part2_q2 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+1. The reconstruction part of the loss role is to make sure that the decoded images will be similar to the training data in order to make sure that we sample images from the same data space. The KL divergence part purpose is to make sure that the approximated latent space distribution is similar to the true latent space distribution which is a normal distribution.
+2. The KL divergence term makes the latent space distribution similar to the normal distribution from which we sample $z$
+3. The latent space distribution becomes more dense and without gaps so when we sample it (from a normal distribution) the decoder can effectively decode.
+Moreover since we want to generate images by sampling from the latent space we need to know it's distribution in order to get good sampling results.
 """
 
 # ==============
