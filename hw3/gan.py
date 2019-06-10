@@ -171,8 +171,8 @@ def train_batch(dsc_model: Discriminator, gen_model: Generator,
     # ====== YOUR CODE: ======
     batch_size = x_data.shape[0]
     dsc_optimizer.zero_grad()
-    real_data = x_data
-    generated_data = gen_model.sample(batch_size, False)
+    real_data = dsc_model(x_data)
+    generated_data = dsc_model(gen_model.sample(batch_size, with_grad=False))
     dsc_loss = dsc_loss_fn(real_data, generated_data)
     dsc_loss.backward()
     dsc_optimizer.step()
@@ -184,7 +184,7 @@ def train_batch(dsc_model: Discriminator, gen_model: Generator,
     # 3. Update generator parameters
     # ====== YOUR CODE: ======
     gen_optimizer.zero_grad()
-    generated_data = gen_model.sample(batch_size, False)
+    generated_data = dsc_model(gen_model.sample(batch_size, with_grad=True))
     gen_loss = gen_loss_fn(generated_data)
     gen_loss.backward()
     gen_optimizer.step()

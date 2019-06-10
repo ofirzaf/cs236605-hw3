@@ -92,15 +92,15 @@ PART3_CUSTOM_DATA_URL = None
 
 def part3_gan_hyperparams():
     hypers = dict(
-        batch_size=8, z_dim=20,
-        data_label=1, label_noise=0.1,
+        batch_size=8, z_dim=128,
+        data_label=1, label_noise=0.3,
         discriminator_optimizer=dict(
             type='SGD',  # Any name in nn.optim like SGD, Adam
-            lr=1.0,
+            lr=.1,
         ),
         generator_optimizer=dict(
-            type='SGD',  # Any name in nn.optim like SGD, Adam
-            lr=1.0,
+            type='Adam',  # Any name in nn.optim like SGD, Adam
+            lr=10e-5,
         ),
     )
     # TODO: Tweak the hyperparameters to train your GAN.
@@ -110,41 +110,17 @@ def part3_gan_hyperparams():
 
 
 part3_q1 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+We are training 2 different networks concurently which have adversary objectives.<br>
+The discriminator parameters gradients are not affected at all by the generator's parameter's gradients, moreover the gradients of the generator's parameters calculated w.r.t the discriminator loss will tend to make the generator worse because the objective is to minimize the discriminator loss.<br>
+When training the generator we calculate gradients in both networks since the gradients of the generator's parameters are calculated w.r.t the discriminator's gradients.
 """
 
 part3_q2 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+1. No, since we are training the networks on adverse objectives, in every step both networks will get better at their objectives. If the genertor loss is below some threshold is doesn't mean that it converged since the loss function is also dependent on the discriminator.
+2. It means that the generator learns faster than the discriminator, in order to improve learning it is better to enhance the discriminator's learning.
 """
 
 part3_q3 = r"""
-**Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
 
 """
 
