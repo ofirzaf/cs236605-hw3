@@ -22,7 +22,12 @@ class Discriminator(nn.Module):
         # You can then use either an affine layer or another conv layer to
         # flatten the features.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.cnn = EncoderCNN(self.in_size[0], 256)
+        # get output size of CNN
+        device = next(self.parameters()).device
+        h = self.cnn(torch.rand(1, *in_size, device=device))
+        n_features = torch.numel(h) // h.shape[0]
+        self.linear = nn.Linear(n_features, 1)
         # ========================
 
     def forward(self, x):
@@ -35,7 +40,7 @@ class Discriminator(nn.Module):
         # No need to apply sigmoid to obtain probability - we'll combine it
         # with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        y = self.linear(self.cnn(x).view((x.shape[0], -1)))
         # ========================
         return y
 
@@ -56,7 +61,10 @@ class Generator(nn.Module):
         # section or implement something new.
         # You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.cnn_in_size = [256, 8, 8]
+        n_features = 2**14
+        self.linear = nn.Linear(self.z_dim, n_features)
+        self.cnn = DecoderCNN(self.cnn_in_size[0], out_channels)
         # ========================
 
     def sample(self, n, with_grad=False):
@@ -73,7 +81,9 @@ class Generator(nn.Module):
         # Generate n latent space samples and return their reconstructions.
         # Don't use a loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.set_grad_enabled(with_grad):
+            z = torch.randn(n, self.z_dim, device=device)
+            samples = self(z)
         # ========================
         return samples
 
@@ -87,7 +97,7 @@ class Generator(nn.Module):
         # Don't forget to make sure the output instances have the same scale
         # as the original (real) images.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        x = self.cnn(self.linear(z).view(-1, *self.cnn_in_size))
         # ========================
         return x
 
@@ -111,7 +121,15 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
     # TODO: Implement the discriminator loss.
     # See torch's BCEWithLogitsLoss for a numerically stable implementation.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    # loss data
+    noise = torch.rand_like(y_data) * label_noise - (label_noise / 2)
+    real_labels = noise + data_label
+    loss_data  = F.binary_cross_entropy_with_logits(y_data, real_labels)
+    # loss generated
+    noise = torch.rand_like(y_generated) * label_noise - (label_noise / 2)
+    generated_labels = noise
+    # TODO maybe fix -1
+    loss_generated = F.binary_cross_entropy_with_logits(y_generated, generated_labels)
     # ========================
     return loss_data + loss_generated
 
@@ -130,7 +148,8 @@ def generator_loss_fn(y_generated, data_label=0):
     # Think about what you need to compare the input to, in order to
     # formulate the loss in terms of Binary Cross Entropy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    labels = torch.full_like(y_generated, data_label)
+    loss = F.binary_cross_entropy_with_logits(y_generated, labels)
     # ========================
     return loss
 
@@ -150,7 +169,13 @@ def train_batch(dsc_model: Discriminator, gen_model: Generator,
     # 2. Calculate discriminator loss
     # 3. Update discriminator parameters
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    batch_size = x_data.shape[0]
+    dsc_optimizer.zero_grad()
+    real_data = x_data
+    generated_data = gen_model.sample(batch_size, False)
+    dsc_loss = dsc_loss_fn(real_data, generated_data)
+    dsc_loss.backward()
+    dsc_optimizer.step()
     # ========================
 
     # TODO: Generator update
@@ -158,7 +183,11 @@ def train_batch(dsc_model: Discriminator, gen_model: Generator,
     # 2. Calculate generator loss
     # 3. Update generator parameters
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    gen_optimizer.zero_grad()
+    generated_data = gen_model.sample(batch_size, False)
+    gen_loss = gen_loss_fn(generated_data)
+    gen_loss.backward()
+    gen_optimizer.step()
     # ========================
 
     return dsc_loss.item(), gen_loss.item()
