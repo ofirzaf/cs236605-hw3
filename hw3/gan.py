@@ -127,7 +127,7 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
     loss_data  = F.binary_cross_entropy_with_logits(y_data, real_labels)
     # loss generated
     noise = torch.rand_like(y_generated) * label_noise - (label_noise / 2)
-    generated_labels = noise
+    generated_labels = noise + (1 - data_label)
     # TODO maybe fix -1
     loss_generated = F.binary_cross_entropy_with_logits(y_generated, generated_labels)
     # ========================
