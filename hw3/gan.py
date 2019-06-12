@@ -24,6 +24,7 @@ class Discriminator(nn.Module):
         # ====== YOUR CODE: ======
         self.cnn = EncoderCNN(self.in_size[0], 256)
         # get output size of CNN
+        # comment
         device = next(self.parameters()).device
         h = self.cnn(torch.rand(1, *in_size, device=device))
         n_features = torch.numel(h) // h.shape[0]
