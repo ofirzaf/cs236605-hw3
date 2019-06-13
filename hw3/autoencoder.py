@@ -17,12 +17,12 @@ class EncoderCNN(nn.Module):
         # You can use any Conv layer parameters, use pooling or only strides,
         # use any activation functions, use BN or Dropout, etc.
         # ====== YOUR CODE: ======
-        channels = [in_channels] + [2**i for i in range(5, 10)] + [out_channels]
+        channels = [in_channels] + [2**i for i in range(5, 8)] + [out_channels]
         for i in range(len(channels) - 1):
             modules.append(nn.Conv2d(channels[i], channels[i + 1], kernel_size=3, padding=1, stride=1))
             modules.append(nn.BatchNorm2d(channels[i + 1]))
             modules.append(nn.ReLU())
-            if i % 2:
+            if i % 2 or True:
                 modules.append(nn.MaxPool2d(kernel_size=2, stride=2))
         # ========================
         self.cnn = nn.Sequential(*modules)
@@ -45,12 +45,12 @@ class DecoderCNN(nn.Module):
         # Output should be a batch of images, with same dimensions as the
         # inputs to the Encoder were.
         # ====== YOUR CODE: ======
-        channels = [in_channels] + [2 ** i for i in range(9, 4, -1)] + [out_channels]
+        channels = [in_channels] + [2 ** i for i in range(7, 4, -1)] + [out_channels]
         for i in range(len(channels) - 1):
             modules.append(nn.ConvTranspose2d(channels[i], channels[i + 1], kernel_size=3, padding=1, stride=1))
             modules.append(nn.BatchNorm2d(channels[i + 1]))
             modules.append(nn.ReLU())
-            if i % 2:
+            if i % 2 or True:
                 modules.append(nn.Upsample(scale_factor=2))
         # ========================
         self.cnn = nn.Sequential(*modules)
