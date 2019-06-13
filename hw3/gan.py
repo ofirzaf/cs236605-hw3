@@ -22,25 +22,20 @@ class Discriminator(nn.Module):
         # You can then use either an affine layer or another conv layer to
         # flatten the features.
         # ====== YOUR CODE: ======
-        ndf = 64
+        filters_factor = 64
         self.cnn = nn.Sequential(
-            # input is (nc) x 64 x 64
-            nn.Conv2d(in_size[0], ndf, 4, 2, 1, bias=False),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf) x 32 x 32
-            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 2),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 4),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ndf * 8),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+            nn.Conv2d(in_size[0], filters_factor, 4, stride=2, padding=1, bias=False),
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(filters_factor, filters_factor * 2, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(filters_factor * 2),
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(filters_factor * 2, filters_factor * 4, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(filters_factor * 4),
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(filters_factor * 4, filters_factor * 8, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(filters_factor * 8),
+            nn.LeakyReLU(0.2),
+            nn.Conv2d(filters_factor * 8, 1, 4, stride=1, padding=0, bias=False),
             nn.Sigmoid()    
         )
         # ========================
@@ -55,7 +50,6 @@ class Discriminator(nn.Module):
         # No need to apply sigmoid to obtain probability - we'll combine it
         # with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
-        # BUG?!
         y = self.cnn(x).view(x.shape[0], -1)
         # ========================
         return y
@@ -77,28 +71,22 @@ class Generator(nn.Module):
         # section or implement something new.
         # You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        ngf = 64
+        filters_factor = 64
         self.cnn = nn.Sequential(
-            # input is Z, going into a convolution
-            nn.ConvTranspose2d(self.z_dim, ngf * 8, 4, 1, 0, bias=False),
-            nn.BatchNorm2d(ngf * 8),
-            nn.ReLU(True),
-            # state size. (ngf*8) x 4 x 4
-            nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf * 4),
-            nn.ReLU(True),
-            # state size. (ngf*4) x 8 x 8
-            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf * 2),
-            nn.ReLU(True),
-            # state size. (ngf*2) x 16 x 16
-            nn.ConvTranspose2d(ngf * 2,     ngf, 4, 2, 1, bias=False),
-            nn.BatchNorm2d(ngf),
-            nn.ReLU(True),
-            # state size. (ngf) x 32 x 32
-            nn.ConvTranspose2d(ngf,      out_channels, 4, 2, 1, bias=False),
+            nn.ConvTranspose2d(self.z_dim, filters_factor * 8, featuremap_size, stride=1, padding=0, bias=False),
+            nn.BatchNorm2d(filters_factor * 8),
+            nn.ReLU(),
+            nn.ConvTranspose2d(filters_factor * 8, filters_factor * 4, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(filters_factor * 4),
+            nn.ReLU(),
+            nn.ConvTranspose2d(filters_factor * 4, filters_factor * 2, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(filters_factor * 2),
+            nn.ReLU(),
+            nn.ConvTranspose2d(filters_factor * 2, filters_factor, 4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(filters_factor),
+            nn.ReLU(),
+            nn.ConvTranspose2d(filters_factor, out_channels, 4, stride=2, padding=1, bias=False),
             nn.Tanh()
-            # state size. (nc) x 64 x 64
         )
         # ========================
 
